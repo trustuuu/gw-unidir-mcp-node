@@ -6,7 +6,7 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 80;
 
 // ---------- Root: List available tools ----------
 app.get("/", (req, res) => {
