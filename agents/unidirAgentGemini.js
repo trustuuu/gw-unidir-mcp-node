@@ -76,7 +76,8 @@ User message: ${prompt}
     });
 
     // Step 4: Ask Gemini to summarize response
-    const summaryPrompt = `Summarize this UniDir user data clearly. if the result is JSON, display JSON format at the end of result:\n${result}`;
+    //const summaryPrompt = `Summarize this UniDir user data clearly. if the result is JSON, display JSON format at the end of result:\n${result}`;
+    const summaryPrompt = `${prompt}. result:\n${result}`;
     const summary = await model.generateContent(summaryPrompt);
     return summary.response.text();
   }
