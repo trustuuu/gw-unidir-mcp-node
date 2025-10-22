@@ -10,7 +10,7 @@ export async function getAccessToken(args = {}) {
     client_id: args.client_id,
     client_secret: args.client_secret,
   });
-
+  console.log("data", data);
   const result = await safeApiCall({
     method: "POST",
     url: tokenUrl,
@@ -21,3 +21,19 @@ export async function getAccessToken(args = {}) {
   if (!result.ok) return error(result.error);
   return success(result.data.access_token);
 }
+
+/*
+curl http://localhost:8080/
+
+curl -X POST https://unidir-mcp.biocloud.pro/call_tool \
+  -H "Content-Type: application/json" \
+  -d '{
+        "name": "get_access_token",
+       "arguments": {
+            "client_id": "adfadsvVETVVdfdftVDDSDVDkdfdfndf",
+            "client_secret":"9SmSkvoLuGeFfA7IHsjb31cOPl1CPwgn"
+            }
+      }'
+
+  
+*/

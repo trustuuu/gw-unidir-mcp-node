@@ -1,13 +1,37 @@
 import express from "express";
 import dotenv from "dotenv";
+import cors from "cors";
 import { tools } from "./tools/index.js";
+import { runAgent } from "./agents/unidirAgentGemini.js";
+import { authenticate } from "./utils/jwks.js";
 
 dotenv.config();
 const app = express();
-app.use(express.json());
 
 const PORT = process.env.PORT || 80;
-
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    methods: ["GET", "POST", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  })
+);
+// app.use((req, res, next) => {
+//   const origin = req.headers.origin;
+//   console.log("origin", origin, req.path.replace(/\/$/, ""));
+//   res.header("Access-Control-Allow-Origin", "http://localhost:3000");
+//   res.header(
+//     "Access-Control-Allow-Headers",
+//     "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+//   );
+//   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+//   if (req.method === "OPTIONS") {
+//     return res.sendStatus(200);
+//   }
+//   next();
+// });
+app.use(express.json());
 // ---------- Root: List available tools ----------
 app.get("/", (req, res) => {
   res.json({
@@ -33,6 +57,19 @@ app.post("/call_tool", async (req, res) => {
   }
 });
 
+app.post("/chat", authenticate, async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    const token = authHeader.split(" ")[1];
+    const { message } = req.body;
+    const reply = await runAgent(req.auth, token, message);
+    res.json({ reply });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ---------- Start ----------
 app.listen(PORT, () => {
   console.log(`[HTTP] MCP Server running on http://localhost:${PORT}`);
@@ -41,7 +78,10 @@ app.listen(PORT, () => {
 /*
 curl http://localhost:8080/
 
-curl -X POST http://localhost:8080/call_tool \
+curl -X POST https://gw-unidir-mcp-node.vercel.app/call_tool \
   -H "Content-Type: application/json" \
-  -d '{"name": "get_access_token"}'
+  -d '{"name": "get_access_token",
+       "client_id": "adfadsvVETVVdfdftVDDSDVDkdfdfndf",
+       "client_secret":"9SmSkvoLuGeFfA7IHsjb31cOPl1CPwgn"}'
+  
 */
