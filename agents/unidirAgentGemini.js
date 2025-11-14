@@ -331,10 +331,13 @@ export async function runAgent(auth, token, prompt) {
       user_id: userId,
       token: token,
     });
+    console.log("fetch_unidir_user data", result);
     const summaryPrompt = makeSummaryPrompt(prompt, result, action);
     const summary = await model.generateContent(summaryPrompt);
     finalResult = summary.response.text();
     finalResult = AddTargetURL(finalResult, action);
+    console.log("fetch_unidir_user finalResult", finalResult);
+
     return finalResult;
   } else if (action?.action === "fetch_unidir_group") {
     const groupId = action.args?.group_id;
@@ -345,7 +348,7 @@ export async function runAgent(auth, token, prompt) {
       group_id: groupId,
       token: token,
     });
-
+    console.log("fetch_unidir_group data", result);
     // Step 4: Ask Gemini to summarize response
     //const summaryPrompt = `Summarize this UniDir user data clearly. if the result is JSON, display JSON format at the end of result:\n${result}`;
     const summaryPrompt = `${prompt}. result:\n${result}`;
@@ -353,6 +356,7 @@ export async function runAgent(auth, token, prompt) {
 
     finalResult = summary.response.text();
     finalResult = AddTargetURL(finalResult, action);
+    console.log("fetch_unidir_group finalResult", finalResult);
     return finalResult;
 
     // console.log("prompt, result, action", prompt, result, action);
@@ -360,6 +364,24 @@ export async function runAgent(auth, token, prompt) {
     // console.log("summaryPrompt", summaryPrompt);
     // const summary = await model.generateContent(summaryPrompt);
     // return summary.response.text();
+  } else if (action?.action === "fetch_unidir_domain") {
+    const domainId = action.args?.domain_id;
+
+    const result = await callUnidirTool("fetch_unidir_domain", {
+      company_id: companyId,
+      domain_id: domainId,
+      token: token,
+    });
+    console.log("fetch_unidir_domain data", result);
+    // Step 4: Ask Gemini to summarize response
+    //const summaryPrompt = `Summarize this UniDir user data clearly. if the result is JSON, display JSON format at the end of result:\n${result}`;
+    const summaryPrompt = `${prompt}. result:\n${result}`;
+    const summary = await model.generateContent(summaryPrompt);
+
+    finalResult = summary.response.text();
+    finalResult = AddTargetURL(finalResult, action);
+    console.log("fetch_unidir_domain finalResult", finalResult);
+    return finalResult;
   } else {
     //const finalResult = `[url]:\n\n${uiRules.server.baseUrl}/${uiRules.server.redirect_page}?targetPage=${action.retrievePath}&${action.retrieveParams}\n\n${action.description}`;
     finalResult = AddTargetURL(finalResult, action);
