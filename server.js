@@ -9,10 +9,8 @@ dotenv.config();
 const app = express();
 
 const PORT = process.env.PORT || 80;
-const allowedOrigins = [
-  "http://localhost:3000",
-  "https://control.biocloud.pro",
-];
+const origins = process.env.ALLOWED_ORIGINS.split(",");
+const allowedOrigins = origins;
 app.use(
   cors({
     //origin: "http://localhost:3000",
