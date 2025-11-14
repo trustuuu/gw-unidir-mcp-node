@@ -4,7 +4,7 @@ import { callUnidirTool } from "../tools/callUnidirTool.js";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-//import { baseUrl } from "../utils/constants.js";
+import { baseUrl } from "../utils/constants.js";
 
 dotenv.config();
 
@@ -388,9 +388,9 @@ function AddTargetURL(finalResult, action) {
   const paramString = jsonToParams(action.retrieveParams);
   console.log("paramString", paramString);
   if (action?.retrievePath) {
-    finalResult = `${finalResult}\n\n\n\n\n\n[url]:\n\n${uiRules.server.baseUrl}/${uiRules.server.redirect_page}?targetPage=${action.retrievePath}${paramString}\n\n${action.description}`;
+    finalResult = `${finalResult}\n\n\n\n\n\n[url]:\n\n${baseUrl}/${uiRules.server.redirect_page}?targetPage=${action.retrievePath}${paramString}\n\n${action.description}`;
   } else {
-    finalResult = `[url]:\n\n${uiRules.server.baseUrl}/${uiRules.server.redirect_page}?targetPage=${action.retrievePath}${paramString}\n\n${action.description}`;
+    finalResult = `[url]:\n\n${baseUrl}/${uiRules.server.redirect_page}?targetPage=${action.retrievePath}${paramString}\n\n${action.description}`;
   }
   return finalResult;
 }
