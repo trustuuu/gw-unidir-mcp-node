@@ -1,0 +1,123 @@
+{
+  "Universal Directory Application": "3.0.0",
+  "info": {
+    "title": "Universal Directory Application",
+    "version": "1.0.0",
+    "description": "Universal Directory Application documentation for managing companies, domain names, users, groups, and provisionings within the UniDir system."
+  },
+  "server": {
+    "baseUrl": "http://localhost:3000",
+    "description": "Local development server",
+    "redirect_page": "redirect-mcp"
+  },
+  "rules": [
+    {
+      "rule": "If the user asks about all companies, respond with a JSON object, path and params",
+      "path": "onboarding-companies",
+      "params": "",
+      "description": "List all companies."
+    },
+    {
+      "rule": "If the user asks to create new company. , respond with a JSON object, path and params.",
+      "path": "onboarding-company-new",
+      "params": "mode=new",
+      "description": "Post a new company."
+    },
+    {
+      "rule": "If the user asks about all domains, respond with a JSON object, path and params.",
+      "path": "onboarding-domains",
+      "params": "",
+      "description": "List all domains."
+    },
+    {
+      "rule": "If the user asks about new domain, respond with a JSON object, path and params.",
+      "path": "onboarding-domain-new",
+      "params": "mode=new",
+      "description": "Post a new domain."
+    },
+    {
+      "rule": "If the user asks about all users, respond with a JSON object, path and params.",
+      "path": "users",
+      "params": "status=active",
+      "description": "List all users."
+    },
+    {
+      "rule": "If the user asks to delete a user. , respond with a JSON object, path and params.",
+      "path": "users-deleted",
+      "params": "status=deleted",
+      "description": "List all deleted users but not purged permantally. users can be undeleted or purge permantally."
+    },
+    {
+      "rule": "If the user asks to create new user. , respond with a JSON object, path and params.",
+      "path": "users-new",
+      "params": "mode=new",
+      "description": "Post a new user."
+    },
+    {
+      "rule": "If the user asks about a user, respond with a JSON object, path and params.",
+      "path": "users-view",
+      "params": "mode=view",
+      "description": "View a new ueer's all properties."
+    },
+    {
+      "rule": "If the user asks to edit a user, respond with a JSON object, path and params.",
+      "path": "users-edit",
+      "params": "mode=edit",
+      "description": "Edit a new user's all properties."
+    },
+    {
+      "rule": "If the user asks about all groups, respond with a JSON object, path and params.",
+      "path": "groups",
+      "params": "status=active",
+      "description": "List all groups."
+    },
+    {
+      "rule": "If the user asks to delete a group, respond with a JSON object, path and params.",
+      "path": "groups-deleted",
+      "params": "status=deleted",
+      "description": "List all deleted groups but not purged permantally. groups can be undeleted or purge permantally."
+    },
+    {
+      "rule": "If the user asks to create a group, respond with a JSON object, path and params.",
+      "path": "groups-new",
+      "params": "mode=new",
+      "description": "Post a new group."
+    },
+    {
+      "rule": "If the user asks about all group, respond with a JSON object, path and params.",
+      "path": "groups-view",
+      "params": "mode=view",
+      "description": "View a group information."
+    },
+    {
+      "rule": "If the user asks about all applications, respond with a JSON object, path and params.",
+      "path": "applications",
+      "params": "status=active",
+      "description": "List all applications."
+    },
+    {
+      "rule": "If the user asks about a group information, respond with a JSON object, path and params.",
+      "path": "applications-brief",
+      "params": "mode=view",
+      "description": "View a application information."
+    },
+    {
+      "rule": "If the user asks to see a application information, respond with a JSON object, path and params.",
+      "path": "applications-view-setting",
+      "params": "mode=view",
+      "description": "View a application information in detail."
+    },
+    {
+      "rule": "If the user asks about new application, respond with a JSON object, path and params.",
+      "path": "applications-view-post",
+      "params": "mode=new",
+      "description": "Post a application "
+    },
+    {
+      "rule": "If the user asks to edit applicaiton permission scopes, respond with a JSON object, path and params.",
+      "path": "applications-view-permission-scope",
+      "params": "mode=edit",
+      "description": "View all permission scopes of a application."
+    }
+  ]
+}

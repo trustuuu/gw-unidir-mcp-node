@@ -1,0 +1,250 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "UniDir Company Management API",
+    "version": "1.0.0",
+    "description": "API documentation for managing companies, domain names, users, groups, and provisionings within the UniDir system."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8081/v1",
+      "description": "Local development server"
+    }
+  ],
+  "paths": {
+    "/companys": {
+      "get": {
+        "summary": "List all companies",
+        "responses": { "200": { "description": "A list of companies" } }
+      },
+      "post": {
+        "summary": "Create a new company",
+        "responses": { "201": { "description": "Company created" } }
+      },
+      "delete": {
+        "summary": "Delete all companies",
+        "responses": { "204": { "description": "All companies deleted" } }
+      }
+    },
+    "/companys/{id}": {
+      "get": {
+        "summary": "Get company by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "200": { "description": "Company details" } }
+      },
+      "put": {
+        "summary": "Update company",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "200": { "description": "Company updated" } }
+      },
+      "delete": {
+        "summary": "Delete company",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "204": { "description": "Company deleted" } }
+      }
+    },
+    "/companys/{id}/childCompanys": {
+      "get": {
+        "summary": "List child companies",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "200": { "description": "List of child companies" } }
+      }
+    },
+    "/companys/{id}/domainNames": {
+      "get": {
+        "summary": "List domain names",
+        "responses": { "200": { "description": "Domain list" } }
+      },
+      "post": {
+        "summary": "Create domain name",
+        "responses": { "201": { "description": "Domain created" } }
+      },
+      "put": {
+        "summary": "Update domain name",
+        "responses": { "200": { "description": "Domain updated" } }
+      },
+      "delete": {
+        "summary": "Delete all domain names",
+        "responses": { "204": { "description": "Deleted" } }
+      }
+    },
+    "/companys/{id}/domainNames/primary": {
+      "get": {
+        "summary": "Get primary domain",
+        "responses": { "200": { "description": "Primary domain" } }
+      }
+    },
+    "/companys/{id}/domainNames/{domainId}": {
+      "get": {
+        "summary": "Get domain by ID",
+        "responses": { "200": { "description": "Domain detail" } }
+      },
+      "put": {
+        "summary": "Update domain",
+        "responses": { "200": { "description": "Domain updated" } }
+      },
+      "delete": {
+        "summary": "Delete domain",
+        "responses": { "204": { "description": "Domain deleted" } }
+      }
+    },
+    "/companys/{id}/domainNames/{domainId}/groups": {
+      "get": {
+        "summary": "List groups",
+        "responses": { "200": { "description": "Group list" } }
+      },
+      "post": {
+        "summary": "Create group",
+        "responses": { "201": { "description": "Group created" } }
+      },
+      "put": {
+        "summary": "Update group",
+        "responses": { "200": { "description": "Group updated" } }
+      },
+      "delete": {
+        "summary": "Delete groups",
+        "responses": { "204": { "description": "Groups deleted" } }
+      }
+    },
+    "/companys/{id}/domainNames/{domainId}/groups/{groupId}": {
+      "get": {
+        "summary": "Get group by ID",
+        "responses": { "200": { "description": "Group details" } }
+      },
+      "put": {
+        "summary": "Update group by ID",
+        "responses": { "200": { "description": "Group updated" } }
+      },
+      "delete": {
+        "summary": "Delete group by ID",
+        "responses": { "204": { "description": "Group deleted" } }
+      }
+    },
+    "/companys/{id}/domainNames/{domainId}/users": {
+      "get": {
+        "summary": "List users",
+        "responses": { "200": { "description": "User list" } }
+      },
+      "post": {
+        "summary": "Create user",
+        "responses": { "201": { "description": "User created" } }
+      },
+      "put": {
+        "summary": "Update users",
+        "responses": { "200": { "description": "Users updated" } }
+      },
+      "delete": {
+        "summary": "Delete all users",
+        "responses": { "204": { "description": "Deleted" } }
+      }
+    },
+    "/companys/{id}/domainNames/{domainId}/users/{userId}": {
+      "get": {
+        "summary": "Get user by ID",
+        "responses": { "200": { "description": "User details" } }
+      },
+      "put": {
+        "summary": "Update user",
+        "responses": { "200": { "description": "User updated" } }
+      },
+      "delete": {
+        "summary": "Delete user",
+        "responses": { "204": { "description": "User deleted" } }
+      }
+    },
+    "/companys/{id}/domainNames/{domainId}/users/{email}/verifyPassword": {
+      "post": {
+        "summary": "Verify user password",
+        "responses": { "200": { "description": "Verification result" } }
+      }
+    },
+    "/companys/{id}/domainNames/{domainId}/users/{email}/resetPassword": {
+      "put": {
+        "summary": "Reset user password",
+        "responses": { "200": { "description": "Password reset" } }
+      }
+    },
+    "/companys/{id}/provisionings": {
+      "get": {
+        "summary": "List provisionings",
+        "responses": { "200": { "description": "Provisioning list" } }
+      },
+      "post": {
+        "summary": "Create provisioning",
+        "responses": { "201": { "description": "Provisioning created" } }
+      }
+    },
+    "/companys/{id}/provisionings/{provisioningId}": {
+      "get": {
+        "summary": "Get provisioning by ID",
+        "responses": { "200": { "description": "Provisioning details" } }
+      },
+      "put": {
+        "summary": "Update provisioning",
+        "responses": { "200": { "description": "Provisioning updated" } }
+      },
+      "delete": {
+        "summary": "Delete provisioning",
+        "responses": { "204": { "description": "Deleted" } }
+      }
+    },
+    "/companys/{id}/provisionings/{provisioningId}/connections": {
+      "get": {
+        "summary": "List connections",
+        "responses": { "200": { "description": "Connection list" } }
+      },
+      "post": {
+        "summary": "Create connection",
+        "responses": { "201": { "description": "Connection created" } }
+      }
+    },
+    "/companys/{id}/provisionings/{provisioningId}/connections/{connectionId}": {
+      "get": {
+        "summary": "Get connection",
+        "responses": { "200": { "description": "Connection details" } }
+      },
+      "put": {
+        "summary": "Update connection",
+        "responses": { "200": { "description": "Connection updated" } }
+      },
+      "delete": {
+        "summary": "Delete connection",
+        "responses": { "204": { "description": "Deleted" } }
+      }
+    },
+    "/companys/{companyId}/domainNames/{domainId}/purge/cors": {
+      "post": {
+        "summary": "Purge CORS cache",
+        "responses": { "200": { "description": "CORS purged" } }
+      }
+    }
+  }
+}

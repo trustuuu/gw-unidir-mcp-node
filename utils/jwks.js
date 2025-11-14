@@ -39,7 +39,6 @@ export function authenticate(req, res, next) {
 
   const payloadBase64 = parts[1];
   const payloadJson = Buffer.from(payloadBase64, "base64url").toString("utf-8");
-  console.log("payloadJson", payloadJson);
   let payload;
   try {
     payload = JSON.parse(payloadJson);

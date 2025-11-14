@@ -1,0 +1,114 @@
+{
+  "Universal Directory Application": "3.0.0",
+  "info": {
+    "title": "Universal Directory Application",
+    "version": "1.0.0",
+    "description": "Universal Directory Application documentation for managing companies, domain names, users, groups, and provisionings within the UniDir system."
+  },
+  "server": {
+    "baseurl": "http://localhost:3000",
+    "description": "Local development server"
+  },
+  "rules": [
+    {
+      "rule": "If the user asks about all companies, respond with a JSON object",
+      "action": "fetch_unidir_companys",
+      "args": { "_id": "..." },
+      "path": "/onboarding-companies",
+      "description": "List all companies."
+    },
+    {
+      "rule": "If the user asks to create new company. provide with path",
+      "action": null,
+      "args": null,
+      "path": "/onboarding-company-new",
+      "description": "Post a new company."
+    },
+    {
+      "path": "/onboarding-domains",
+      "description": "List all domains."
+    },
+    {
+      "path": "/onboarding-domain-new",
+      "description": "Post a new domain."
+    },
+    {
+      "rule": "If the user asks about all user, respond with a JSON object",
+      "action": "fetch_unidir_user",
+      "args": { "user_id": "" },
+      "path": "/users",
+      "description": "List all users."
+    },
+    {
+      "rule": "If the user asks to delete a user. provide with path",
+      "action": null,
+      "args": null,
+      "path": "/users-deleted",
+      "description": "List all deleted users but not purged permantally. users can be undeleted or purge permantally."
+    },
+    {
+      "rule": "If the user asks to create new user. provide with path",
+      "action": null,
+      "args": null,
+      "path": "/users-new",
+      "description": "Post a new user."
+    },
+    {
+      "rule": "If the user asks about a user, respond with a JSON object",
+      "action": "fetch_unidir_user",
+      "args": { "user_id": "..." },
+      "path": "/users-view",
+      "description": "View a new ueer's all properties."
+    },
+    {
+      "path": "/users-edit",
+      "description": "Edit a new user's all properties."
+    },
+    {
+      "rule": "If the user asks about a group, respond with a JSON object",
+      "action": "fetch_unidir_group",
+      "args": { "group_id": "..." },
+      "path": "/groups",
+      "description": "List all groups."
+    },
+    {
+      "path": "/groups-deleted",
+      "description": "List all deleted groups but not purged permantally. groups can be undeleted or purge permantally."
+    },
+    {
+      "path": "/groups-new",
+      "description": "Post a new group."
+    },
+    {
+      "rule": "If the user asks about all group, respond with a JSON object",
+      "action": "fetch_unidir_group",
+      "args": { "group_id": "" },
+      "path": "/groups-view",
+      "description": "View a new group's all properties."
+    },
+    {
+      "path": "/onboarding",
+      "description": "Edit a new group's all properties."
+    },
+    {
+      "path": "/applications",
+      "description": "List all applications."
+    },
+    {
+      "path": "/applications-brief",
+      "description": "View a application information."
+    },
+    {
+      "path": "/applications-view-setting",
+      "description": "View a application information in detail."
+    },
+    {
+      "path": "/applications-view-post",
+      "description": "Post a application "
+    },
+    {
+      "path": "/applications-view-permission-scope",
+      "description": "View all permission scopes of a application."
+    }
+  ]
+}

@@ -15,8 +15,9 @@ const allowedOrigins = [
 ];
 app.use(
   cors({
-    // origin: "http://localhost:3000",
+    //origin: "http://localhost:3000",
     origin: (origin, callback) => {
+      console.log("allowedOrigins, origin", allowedOrigins, origin);
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
@@ -24,7 +25,12 @@ app.use(
       }
     },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "X-Requested-With",
+      "x-device-id",
+    ],
     credentials: true,
   })
 );
@@ -53,6 +59,7 @@ app.get("/", (req, res) => {
 
 // ---------- Call a specific tool ----------
 app.post("/call_tool", async (req, res) => {
+  console.log("req.body", req.body);
   const { name, arguments: args = {} } = req.body;
   const toolFn = tools[name];
   if (!toolFn) return res.json({ ok: false, error: `Unknown tool: ${name}` });
