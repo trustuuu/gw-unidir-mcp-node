@@ -18,9 +18,15 @@
       "description": "List all companies."
     },
     {
+      "rule": "If the user asks about a company with company id, respond with a JSON object, path and params",
+      "path": "onboarding-company-new",
+      "params": "{'companyId':{company_id}, 'mode':'view'}",
+      "description": "show or view a company information."
+    },
+    {
       "rule": "If the user asks to create new company. , respond with a JSON object, path and params.",
       "path": "onboarding-company-new",
-      "params": "mode=new",
+      "params": "{'mode':'new'}",
       "description": "Post a new company."
     },
     {
@@ -30,87 +36,99 @@
       "description": "List all domains."
     },
     {
+      "rule": "If the user asks about a domain with domain id, respond with a JSON object, path and params",
+      "path": "onboarding-domain-new",
+      "params": "{'domainId':{domain_id}, 'mode':'view'}",
+      "description": "show or view a domain information."
+    },
+    {
       "rule": "If the user asks about new domain, respond with a JSON object, path and params.",
       "path": "onboarding-domain-new",
-      "params": "mode=new",
+      "params": "{'mode':'new'}",
       "description": "Post a new domain."
     },
     {
       "rule": "If the user asks about all users, respond with a JSON object, path and params.",
       "path": "users",
-      "params": "status=active",
+      "params": "{'status':'active'}",
       "description": "List all users."
     },
     {
       "rule": "If the user asks to delete a user. , respond with a JSON object, path and params.",
       "path": "users-deleted",
-      "params": "status=deleted",
+      "params": "{'status':'deleted'}",
       "description": "List all deleted users but not purged permantally. users can be undeleted or purge permantally."
+    },
+    {
+      "rule": "If the user asks about a user with user id, respond with a JSON object, path and params",
+      "path": "users-view",
+      "params": "{'userId':{user_id}, 'mode':'view'}",
+      "description": "show or view a user information."
     },
     {
       "rule": "If the user asks to create new user. , respond with a JSON object, path and params.",
       "path": "users-new",
-      "params": "mode=new",
+      "params": "{'mode':'new'}",
       "description": "Post a new user."
     },
     {
-      "rule": "If the user asks about a user, respond with a JSON object, path and params.",
-      "path": "users-view",
-      "params": "mode=view",
-      "description": "View a new ueer's all properties."
-    },
-    {
-      "rule": "If the user asks to edit a user, respond with a JSON object, path and params.",
+      "rule": "If the user asks to edit a user with user id, respond with a JSON object, path and params",
       "path": "users-edit",
-      "params": "mode=edit",
-      "description": "Edit a new user's all properties."
+      "params": "{'userId':{user_id}, 'mode':'edit'}",
+      "description": "Edit or modify a user information."
     },
     {
       "rule": "If the user asks about all groups, respond with a JSON object, path and params.",
       "path": "groups",
-      "params": "status=active",
+      "params": "{'status':'active'}",
       "description": "List all groups."
     },
     {
       "rule": "If the user asks to delete a group, respond with a JSON object, path and params.",
       "path": "groups-deleted",
-      "params": "status=deleted",
+      "params": "{'status':'deleted'}",
       "description": "List all deleted groups but not purged permantally. groups can be undeleted or purge permantally."
     },
     {
       "rule": "If the user asks to create a group, respond with a JSON object, path and params.",
       "path": "groups-new",
-      "params": "mode=new",
+      "params": "{'mode':'new'}",
       "description": "Post a new group."
     },
     {
-      "rule": "If the user asks about all group, respond with a JSON object, path and params.",
+      "rule": "If the user asks about a group with group id, respond with a JSON object, path and params",
       "path": "groups-view",
-      "params": "mode=view",
-      "description": "View a group information."
+      "params": "{'groupId':{group_id}, 'mode':'view'}",
+      "description": "show or view a group information."
+    },
+    {
+      "rule": "If the user asks to edit a group with group id, respond with a JSON object, path and params",
+      "path": "users-edit",
+      "params": "{'groupId':{group_id}, 'mode':'edit'}",
+      "description": "Edit or modify a group information."
     },
     {
       "rule": "If the user asks about all applications, respond with a JSON object, path and params.",
       "path": "applications",
-      "params": "status=active",
+      "params": "{'status':'active'}",
       "description": "List all applications."
     },
     {
       "rule": "If the user asks about a group information, respond with a JSON object, path and params.",
       "path": "applications-brief",
-      "params": "mode=view",
+      "params": "{'mode':'view'}",
       "description": "View a application information."
     },
     {
       "rule": "If the user asks to see a application information, respond with a JSON object, path and params.",
       "path": "applications-view-setting",
-      "params": "mode=view",
+      "params": "{'mode':'view'}",
       "description": "View a application information in detail."
     },
     {
       "rule": "If the user asks about new application, respond with a JSON object, path and params.",
       "path": "applications-view-post",
-      "params": "mode=new",
+      "params": "{'mode':'new'}",
       "description": "Post a application "
     },
     {
@@ -118,6 +136,19 @@
       "path": "applications-view-permission-scope",
       "params": "mode=edit",
       "description": "View all permission scopes of a application."
+    },
+
+    {
+      "rule": "If the user asks about all apis, respond with a JSON object, path and params.",
+      "path": "apis",
+      "params": "{'status':'active'}",
+      "description": "List all apis."
+    },
+    {
+      "rule": "If the user asks about a api information, respond with a JSON object, path and params.",
+      "path": "appis-brief",
+      "params": "mode=overview",
+      "description": "View a api information."
     }
   ]
 }
