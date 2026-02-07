@@ -2,11 +2,11 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import dotenv from "dotenv";
 import { callUnidirTool } from "../tools/callUnidirTool.js";
 import { tools } from "../tools/index.js";
-import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { baseUrlWebApp } from "../utils/constants.js";
 import { buildReasoningPrompt } from "../utils/propmts.js";
+import { connect } from "@lancedb/lancedb";
 
 dotenv.config();
 
@@ -22,52 +22,30 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 console.log("__filename, __dirname", __filename, __dirname);
 
-// ----------------------------------------------------------------------
-// Build readable API and UI context for the model
-// ----------------------------------------------------------------------
-const apiSpecPath = path.resolve(
-  __dirname,
-  "../ingest/api-docs/unidir_openapi.json"
-);
-console.log("[DEBUG] Loading backend api spec from", apiSpecPath);
-const apiSpec = JSON.parse(fs.readFileSync(apiSpecPath, "utf-8"));
-const apiEndpoints = Object.entries(apiSpec.paths)
-  .map(([path, ops]) => {
-    const methods = Object.keys(ops)
-      .map((m) => m.toUpperCase())
-      .join(", ");
-    return `• ${path} [${methods}]`;
-  })
-  .join("\n");
-//-----------------------------------------------------------------------
-const specPath = path.resolve(__dirname, "../ingest/api-docs/unidir_page.json");
-console.log("[DEBUG] Loading spec from", specPath);
-
-const uiRules = JSON.parse(fs.readFileSync(specPath, "utf-8"));
-
-// Map over rules and format output
-const retrieveRules = uiRules.rules
-  .map(
-    (r) =>
-      `• ${r.rule || r.description}\n  Path: ${r.path}\n  Params: ${
-        r.params
-      }\n  Desc: ${r.description}`
-  )
-  .join("\n");
-
-/**
- * Simple Gemini-powered reasoning Agent with MCP integration.
- */
 export async function runAgent(auth, token, prompt) {
   const { tenant_id, client_id, companyId, domainId } = auth;
-  //console.log("Agent received:", auth, token, prompt);
+  console.log("Agent received:", auth, token, prompt);
 
   let decisionText = "";
   try {
-    const reasoningPrompt = buildReasoningPrompt(prompt, retrieveRules);
-    //console.log("reasoningPrompt:", reasoningPrompt);
+    const DB_PATH = path.join(process.cwd(), "ingest/unidir_vectors");
+    const db = await connect(DB_PATH);
+    const table = await db.openTable("api_docs");
+    // 1. Embed the user prompt to find what they are looking for
+    const embeddingModel = genAI.getGenerativeModel({
+      model: process.env.GEMINI_EMBEDED_MODEL || "text-embedding-004",
+    });
+    const embeddingResult = await embeddingModel.embedContent(prompt);
+    const queryVector = embeddingResult.embedding.values;
+    // 2. Search Vector DB for top 3 relevant docs
+    const results = await table.search(queryVector).limit(3).toArray();
+    console.log("results", results);
+    // 3. Format context string
+    const retrievedContext = results
+      .map((r) => `Path: ${r.path}\nContent: ${r.text}`)
+      .join("\n---\n");
+    const reasoningPrompt = buildReasoningPrompt(prompt, retrievedContext);
     const reasoningResult = await model.generateContent(reasoningPrompt);
-
     decisionText = reasoningResult.response.text();
     console.log("Gemini decision:", decisionText);
   } catch (err) {
@@ -83,7 +61,7 @@ export async function runAgent(auth, token, prompt) {
       "decisionText, jsonMatch",
       decisionText,
       jsonMatch,
-      jsonMatch.length
+      jsonMatch.length,
     );
     action = jsonMatch ? JSON.parse(jsonMatch[0]) : {};
     console.log("action", action);
@@ -92,24 +70,12 @@ export async function runAgent(auth, token, prompt) {
     return err.message;
   }
 
-  // Helper: Add visible context if path exists
-  const makeSummaryPrompt = (basePrompt, result, action) => {
-    let text = `${basePrompt}\n\nResult:\n${result}`;
-    if (action?.path) {
-      text += `\n\n`;
-    }
-    if (action?.description) {
-      text += `\nDescription: ${action.description}`;
-    }
-    return text;
-  };
-
   const toolAction = tools[action?.action];
   console.log(
     "toolAction, action?.action, tools",
     toolAction,
     action?.action,
-    tools
+    tools,
   );
   let finalResult = "";
   if (!toolAction) {
@@ -183,7 +149,7 @@ function jsonToParams(params) {
     .filter(([_, value]) => value !== undefined && value !== null)
     .map(
       ([key, value]) =>
-        `${encodeURIComponent(key)}=${encodeURIComponent(value)}`
+        `${encodeURIComponent(key)}=${encodeURIComponent(value)}`,
     )
     .join("&");
 
@@ -196,7 +162,7 @@ function AddTargetURL(result, action) {
   console.log("paramString, urlParams", paramString, urlParams);
   let finalResult = "";
   if (action?.retrievePath) {
-    finalResult = `${result}\n\n\n\n\n\n[url]:\n\n${baseUrlWebApp}/${uiRules.server.redirect_page}?targetPage=${action.retrievePath}${paramString}${urlParams}\n\n${action.description}`;
+    finalResult = `${result}\n\n\n\n\n\n[url]:\n\n${baseUrlWebApp}/${process.env.MCP_REDIRECT_PAGE}?targetPage=${action.retrievePath}${paramString}${urlParams}\n\n${action.description}`;
   } else {
     finalResult = result;
   }

@@ -4,6 +4,12 @@ import cors from "cors";
 import { tools } from "./tools/index.js";
 import { runAgent } from "./agents/unidirAgentGemini.js";
 import { authenticate } from "./utils/jwks.js";
+import { authenticateDownstream } from "./utils/verifyDownstream.js";
+import {
+  ensureGoogleToken,
+  getGoogleAccount,
+  getGoogleCalendarEvents,
+} from "./services/googleService.js";
 
 dotenv.config();
 const app = express();
@@ -83,6 +89,48 @@ app.post("/chat", authenticate, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * PROTECTED ENDPOINT
+ * This requires a DOWNSTREAM TOKEN (second token)
+ * NOT login token
+ * NOT Google token
+ */
+app.get("/events", authenticateDownstream, async (req, res) => {
+  try {
+    const userId = req.auth.sub;
+    const companyId = req.auth.companyId || req.auth.tenant_id;
+    const domainId = req.auth.domainId;
+
+    // Load ExternalIdentityAccount for Google
+    const account = await getGoogleAccount(userId, companyId, domainId);
+
+    // Find Google Connection (client_id & client_secret)
+    let connection = {};
+    // const connection = await connectionService.getGoogleConnection({
+    //   companyId,
+    //   domainId,
+    // });
+
+    // Ensure valid (or refreshed) Google access token
+    const googleAccessToken = await ensureGoogleToken(account, connection);
+
+    // Call REAL Google Calendar API
+    const events = await getGoogleCalendarEvents(googleAccessToken);
+
+    return res.json({
+      provider: "google",
+      userId,
+      events,
+    });
+  } catch (err) {
+    console.error("Error in /events:", err);
+    return res.status(500).json({
+      error: "server_error",
+      message: err.message,
+    });
   }
 });
 
