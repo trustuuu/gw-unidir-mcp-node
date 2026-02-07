@@ -1,53 +1,36 @@
-// import { connect } from "@lancedb/lancedb";
-// import { GoogleGenerativeAI } from "@google/generative-ai";
-
-// const db = await connect("./unidir_vectors"); // folder path
-// const table = await db.createTable("api_docs", [], { mode: "overwrite" });
-
-// const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-// const model = genAI.getGenerativeModel({
-//   model: "gemini-2.0-flash",
-// });
-// // 🧠 Generate embedding vector
-// const embeddingResult = await model.embedContent("GET /users endpoint");
-// const vector = embeddingResult.embedding.values; // array of floats
-
-// await table.add([{ id: 1, text: "POST /users", embedding: embed.data[0].embedding }]);
-
-// const results = await table.search(embed.data[0].embedding).limit(3).execute();
-// console.log(results);
-
-/**
- * Ingest JSON files into LanceDB using Gemini embeddings.
- * Each JSON file is embedded and stored as a searchable vector.
- */
-
 import dotenv from "dotenv";
-dotenv.config({ path: path.resolve("../.env") });
-
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
 import { glob } from "glob";
 import { connect } from "@lancedb/lancedb";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
+dotenv.config({ path: path.resolve("../.env") });
+
 // --- Configuration ---
-const DATA_DIR = "./api-docs"; // Folder containing .json files
-const DB_DIR = "./unidir_vectors"; // LanceDB storage path
-const COLLECTION_NAME = "api_docs"; // Table name
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// --- Configuration ---
+const DATA_DIR = path.resolve(__dirname, "api-docs"); // Absolute path to data
+const DB_DIR = path.resolve(__dirname, "./unidir_vectors"); // Absolute path to root DB
+const COLLECTION_NAME = "api_docs";
+
 const gemini = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// 모델명 형식을 'models/text-embedding-004'로 강제하거나 .env 확인
 const model = gemini.getGenerativeModel({
-  model: process.env.GEMINI_EMBEDED_MODEL,
+  model: process.env.GEMINI_EMBEDED_MODEL || "models/text-embedding-004",
 });
 
 // --- Helper: Load JSON files ---
 function loadJsonFiles() {
-  const files = glob.sync(`./${DATA_DIR}/**/*.json`);
+  const files = glob.sync(`${DATA_DIR}/**/unidir_page.json`);
   console.log(`[FILES] Found ${files.length} JSON files`);
   return files;
 }
 
-// --- Helper: Flatten JSON object into text ---
+// --- Helper: Flatten JSON (OAuth2 스코프 및 설명 강조 최적화) ---
 function flattenJson(jsonObj, prefix = "") {
   let result = [];
   for (const key in jsonObj) {
@@ -67,52 +50,65 @@ export async function ingestJsonFiles() {
   console.log(`[DB] Connecting to LanceDB at ${DB_DIR}`);
   const db = await connect(DB_DIR);
 
-  // Your first document record
-  const record = {
-    id: 1,
-    filename: "test.json",
-    path: "./api-docs/test.json",
-    text: "POST /test - create a new user",
-    embedding: Array(768).fill(0.1),
-  };
-
-  const table = await db.createTable(COLLECTION_NAME, [record], {
-    mode: "overwrite",
-  });
-
   const files = loadJsonFiles();
+  if (files.length === 0) {
+    console.warn("⚠️ No files found to ingest.");
+    return;
+  }
+
+  let table;
+  let isFirstRecord = true;
 
   for (const [index, filePath] of files.entries()) {
     try {
       const raw = fs.readFileSync(filePath, "utf-8");
       const jsonData = JSON.parse(raw);
-
       const text = flattenJson(jsonData);
-      const embedding = await model.embedContent(text);
 
-      const vector = embedding.embedding.values;
+      // 🧠 Generate embedding vector
+      const embeddingResponse = await model.embedContent(text);
+      const vector = embeddingResponse.embedding.values;
 
-      await table.add([
-        {
-          id: index + 1,
-          filename: path.basename(filePath),
-          path: filePath,
-          text,
-          embedding: vector,
-        },
-      ]);
+      const record = {
+        id: index + 1,
+        filename: path.basename(filePath),
+        path: filePath,
+        text: text,
+        embedding: vector, // LanceDB는 'vector' 혹은 'embedding' 컬럼명을 자동으로 감지합니다.
+      };
+
+      if (isFirstRecord) {
+        // 첫 번째 레코드로 테이블 생성 (Overwrite 모드)
+        table = await db.createTable(COLLECTION_NAME, [record], {
+          mode: "overwrite",
+        });
+        isFirstRecord = false;
+        console.log(
+          `[DB] Table '${COLLECTION_NAME}' created with first record.`,
+        );
+      } else {
+        // 이후 레코드는 기존 테이블에 추가
+        await table.add([record]);
+      }
 
       console.log(
-        `✅ Ingested ${path.basename(filePath)} (${vector.length} dims)`
+        `✅ Ingested ${path.basename(filePath)} (${vector.length} dims)`,
       );
     } catch (err) {
-      console.error(`[Error]Failed to ingest ${filePath}:`, err.message);
+      // 503 Overloaded 또는 404 Model Not Found 에러 핸들링
+      console.error(`[Error] Failed to ingest ${filePath}:`, err.message);
+      if (err.message.includes("503")) {
+        console.log(
+          "💡 Tip: 모델 과부하입니다. 잠시 후 다시 시도하거나 gemini-2.5-flash를 고려하세요.",
+        );
+      }
     }
   }
 
   console.log(
-    `[DONE] All JSON files ingested into LanceDB (${COLLECTION_NAME})`
+    `\n[DONE] All JSON files ingested into LanceDB (${COLLECTION_NAME})`,
   );
 }
 
-await ingestJsonFiles();
+// 실행
+ingestJsonFiles().catch(console.error);
