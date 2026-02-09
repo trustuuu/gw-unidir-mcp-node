@@ -1,9 +1,10 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { VertexAI } from "@google-cloud/vertexai";
+import { GoogleAuth } from "google-auth-library";
 import dotenv from "dotenv";
 import { callUnidirTool } from "../tools/callUnidirTool.js";
 import { tools } from "../tools/index.js";
 import path from "path";
-import { fileURLToPath } from "url";
+//import { fileURLToPath } from "url";
 import { baseUrlWebApp } from "../utils/constants.js";
 import { buildReasoningPrompt } from "../utils/propmts.js";
 import { connect } from "@lancedb/lancedb";
@@ -13,18 +14,77 @@ dotenv.config();
 // ----------------------------------------------------------------------
 // 3️⃣ Initialize Gemini client
 // ----------------------------------------------------------------------
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({
-  model: process.env.GEMINI_MODEL, //"gemini-2.0-flash",
+const base64Key = process.env.GCP_SERVICE_ACCOUNT_KEY?.trim();
+const jsonString = Buffer.from(base64Key, "base64").toString("utf-8");
+const serviceAccount = JSON.parse(jsonString);
+const privateKey = serviceAccount.private_key.replace(/\\n/g, "\n");
+const auth = new GoogleAuth({
+  credentials: {
+    client_email: serviceAccount.client_email,
+    private_key: privateKey,
+  },
+  scopes: "https://www.googleapis.com/auth/cloud-platform",
+});
+const client = await auth.getClient();
+const accessToken = await client.getAccessToken();
+
+const vertex_ai = new VertexAI({
+  project: process.env.GEMINI_MODEL_PROJECT,
+  location: process.env.GEMINI_MODEL_LOCATION,
+  googleAuthOptions: {
+    credentials: {
+      client_email: serviceAccount.client_email,
+      private_key: privateKey,
+    },
+  },
 });
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-console.log("__filename, __dirname", __filename, __dirname);
+const model = vertex_ai.getGenerativeModel({
+  model: process.env.GEMINI_MODEL,
+});
+
+//const __filename = fileURLToPath(import.meta.url);
+//const __dirname = path.dirname(__filename);
+
+// --- Manual Embedding Helper ---
+async function getEmbedding(text) {
+  const project = process.env.GEMINI_MODEL_PROJECT;
+  const location = process.env.GEMINI_MODEL_LOCATION;
+  const modelId = process.env.GEMINI_EMBEDED_MODEL || "text-embedding-004";
+  const apiEndpoint = `https://${location}-aiplatform.googleapis.com`;
+  const url = `${apiEndpoint}/v1/projects/${project}/locations/${location}/publishers/google/models/${modelId}:predict`;
+
+  // const auth = new GoogleAuth({
+  //   scopes: "https://www.googleapis.com/auth/cloud-platform",
+  // });
+  // const client = await auth.getClient();
+  // const accessToken = await client.getAccessToken();
+  //const serviceAccount = JSON.parse(process.env.GCP_SERVICE_ACCOUNT_KEY);
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken.token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      instances: [{ content: text }],
+      parameters: {},
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      `Embedding API failed: ${response.status} ${response.statusText} - ${await response.text()}`,
+    );
+  }
+
+  const data = await response.json();
+  return data.predictions[0].embeddings.values;
+}
 
 export async function runAgent(auth, token, prompt) {
   const { tenant_id, client_id, companyId, domainId } = auth;
-  console.log("Agent received:", auth, token, prompt);
 
   let decisionText = "";
   try {
@@ -32,22 +92,33 @@ export async function runAgent(auth, token, prompt) {
     const db = await connect(DB_PATH);
     const table = await db.openTable("api_docs");
     // 1. Embed the user prompt to find what they are looking for
-    const embeddingModel = genAI.getGenerativeModel({
-      model: process.env.GEMINI_EMBEDED_MODEL || "text-embedding-004",
-    });
-    const embeddingResult = await embeddingModel.embedContent(prompt);
-    const queryVector = embeddingResult.embedding.values;
+    const queryVector = await getEmbedding(prompt);
+
     // 2. Search Vector DB for top 3 relevant docs
     const results = await table.search(queryVector).limit(3).toArray();
-    console.log("results", results);
+
     // 3. Format context string
     const retrievedContext = results
       .map((r) => `Path: ${r.path}\nContent: ${r.text}`)
       .join("\n---\n");
     const reasoningPrompt = buildReasoningPrompt(prompt, retrievedContext);
+    console.log("reasoningPrompt", reasoningPrompt);
     const reasoningResult = await model.generateContent(reasoningPrompt);
-    decisionText = reasoningResult.response.text();
-    console.log("Gemini decision:", decisionText);
+    console.log("reasoningResult:", reasoningResult);
+    const resoningResponse = await reasoningResult.response;
+    console.log("resoningResponse:", resoningResponse);
+
+    if (resoningResponse.candidates && resoningResponse.candidates.length > 0) {
+      const candidate = resoningResponse.candidates[0];
+      if (candidate.content && candidate.content.parts.length > 0) {
+        decisionText = candidate.content.parts[0].text;
+        console.log("Agent Response:", decisionText);
+      } else {
+        throw new Error("Failed to Gemini decision: No content parts");
+      }
+    } else {
+      throw new Error("Failed to Gemini decision: No candidates");
+    }
   } catch (err) {
     console.error("Failed to Gemini decision::", err);
     return err.message;
@@ -174,9 +245,23 @@ async function getFinalResult(action, prompt, result) {
   // Step 4: Ask Gemini to summarize response
   //const summaryPrompt = `Summarize this UniDir user data clearly. if the result is JSON, display JSON format at the end of result:\n${result}`;
   const summaryPrompt = `${prompt}. result:\n${result}`;
-  const summary = await model.generateContent(summaryPrompt);
-
-  const finalResult = AddTargetURL(summary.response.text(), action);
+  const summaryResult = await model.generateContent(summaryPrompt);
+  console.log("summaryResult:", summaryResult);
+  const summaryResponse = await summaryResult.response;
+  console.log("summaryResponse:", summaryResponse);
+  let finalResult = "";
+  if (summaryResponse.candidates && summaryResponse.candidates.length > 0) {
+    const candidate = summaryResponse.candidates[0];
+    if (candidate.content && candidate.content.parts.length > 0) {
+      finalResult = candidate.content.parts[0].text;
+      finalResult = AddTargetURL(finalResult, action);
+      console.log("Agent Response:", finalResult);
+    } else {
+      finalResult = "Failed to summary decision: No content parts";
+    }
+  } else {
+    finalResult = "Failed to summary decision: No candidates";
+  }
 
   return finalResult;
 }
