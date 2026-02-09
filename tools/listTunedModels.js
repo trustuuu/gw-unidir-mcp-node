@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 async function listTunedModels() {
-  const apiKey = "AIzaSyCERkIXqUFhgOnCADnSYaolTpCnxXJULaw"; //process.env.GEMINI_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY;
   const url = new URL(
     "https://generativelanguage.googleapis.com/v1beta/tunedModels?key=" +
       apiKey +
