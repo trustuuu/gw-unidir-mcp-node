@@ -21,7 +21,6 @@ app.use(
   cors({
     //origin: "http://localhost:3000",
     origin: (origin, callback) => {
-      console.log("allowedOrigins, origin", allowedOrigins, origin);
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
@@ -34,9 +33,11 @@ app.use(
       "Authorization",
       "X-Requested-With",
       "x-device-id",
+      "dpop",
+      "DPoP",
     ],
     credentials: true,
-  })
+  }),
 );
 // app.use((req, res, next) => {
 //   const origin = req.headers.origin;
@@ -83,8 +84,8 @@ app.post("/chat", authenticate, async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
     const token = authHeader.split(" ")[1];
-    const { message } = req.body;
-    const reply = await runAgent(req.auth, token, message);
+    const { message, history } = req.body;
+    const reply = await runAgent(req.auth, token, message, history);
     res.json({ reply });
   } catch (err) {
     console.error(err);

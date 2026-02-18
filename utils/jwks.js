@@ -26,16 +26,17 @@ export const jwtCheckService = expressjwt({
 });
 
 export function authenticate(req, res, next) {
+  console.log("req.headers", req.headers);
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return res.status(401).send("Missing or invalid Authorization header");
   }
 
   const token = authHeader.split(" ")[1];
-  if (!token) throw new Error("there is no token");
-
+  if (!token) res.status(401).send("Invalid token"); //throw new Error("there is no token");
+  console.log("token", token);
   const parts = token.split(".");
-  if (parts.length !== 3) throw new Error("malform JWT");
+  if (parts.length !== 3) res.status(401).send("malform JWT"); //throw new Error("malform JWT");
 
   const payloadBase64 = parts[1];
   const payloadJson = Buffer.from(payloadBase64, "base64url").toString("utf-8");

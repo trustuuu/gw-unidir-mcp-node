@@ -83,7 +83,7 @@ async function getEmbedding(text) {
   return data.predictions[0].embeddings.values;
 }
 
-export async function runAgent(auth, token, prompt) {
+export async function runAgent(auth, token, prompt, history = []) {
   const { tenant_id, client_id, companyId, domainId } = auth;
 
   let decisionText = "";
@@ -103,7 +103,14 @@ export async function runAgent(auth, token, prompt) {
       .join("\n---\n");
     const reasoningPrompt = buildReasoningPrompt(prompt, retrievedContext);
     console.log("reasoningPrompt", reasoningPrompt);
-    const reasoningResult = await model.generateContent(reasoningPrompt);
+
+    // Construct multi-turn conversation
+    const contents = [
+      ...history,
+      { role: "user", parts: [{ text: reasoningPrompt }] },
+    ];
+
+    const reasoningResult = await model.generateContent({ contents });
     console.log("reasoningResult:", reasoningResult);
     const resoningResponse = await reasoningResult.response;
     console.log("resoningResponse:", resoningResponse);
@@ -150,6 +157,8 @@ export async function runAgent(auth, token, prompt) {
   );
   let finalResult = "";
   if (!toolAction) {
+    // If no tool call, the decisionText itself is the response
+    finalResult = decisionText;
     finalResult = AddTargetURL(finalResult, action);
     return finalResult;
   } else {
@@ -201,7 +210,7 @@ export async function runAgent(auth, token, prompt) {
     console.log("ToolData", ToolData);
     const resultTool = await callUnidirTool(action?.action, ToolData);
     console.log("action, resultTool", action, resultTool);
-    finalResult = await getFinalResult(action, prompt, resultTool);
+    finalResult = await getFinalResult(action, prompt, resultTool, history);
     console.log(`${action?.action} finalResult`, finalResult);
 
     return finalResult;
@@ -241,11 +250,17 @@ function AddTargetURL(result, action) {
   return finalResult;
 }
 
-async function getFinalResult(action, prompt, result) {
+async function getFinalResult(action, prompt, result, history = []) {
   // Step 4: Ask Gemini to summarize response
   //const summaryPrompt = `Summarize this UniDir user data clearly. if the result is JSON, display JSON format at the end of result:\n${result}`;
-  const summaryPrompt = `${prompt}. result:\n${result}`;
-  const summaryResult = await model.generateContent(summaryPrompt);
+  const summaryPrompt = `${prompt}. if the result is JSON, return with markdown table format. result:\n${result}`;
+
+  const contents = [
+    ...history,
+    { role: "user", parts: [{ text: summaryPrompt }] },
+  ];
+
+  const summaryResult = await model.generateContent({ contents });
   console.log("summaryResult:", summaryResult);
   const summaryResponse = await summaryResult.response;
   console.log("summaryResponse:", summaryResponse);
