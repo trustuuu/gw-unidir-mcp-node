@@ -10,6 +10,7 @@ import {
   getGoogleAccount,
   getGoogleCalendarEvents,
 } from "./services/googleService.js";
+import { exchangeTokenForDelegation } from "./utils/tokenExchange.js";
 
 dotenv.config();
 const app = express();
@@ -83,9 +84,25 @@ app.post("/call_tool", async (req, res) => {
 app.post("/chat", authenticate, async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
-    const token = authHeader.split(" ")[1];
+    const userToken = authHeader.split(" ")[1];
+
+    // Exchange user token for a delegated service token (DPoP bound)
+    let delegatedToken;
+    try {
+      delegatedToken = await exchangeTokenForDelegation(userToken);
+      console.log("userToken, delegatedToken", userToken, delegatedToken);
+    } catch (exchangeError) {
+      console.error("[Chat] Token exchange failed:", exchangeError.message);
+      // Fail securely if exchange fails
+      return res.status(401).json({
+        error: "token_exchange_failed",
+        message: "Failed to obtain delegated permissions.",
+      });
+    }
+
     const { message, history } = req.body;
-    const reply = await runAgent(req.auth, token, message, history);
+    // Use delegatedToken for downstream calls
+    const reply = await runAgent(req.auth, delegatedToken, message, history);
     res.json({ reply });
   } catch (err) {
     console.error(err);
