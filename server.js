@@ -54,7 +54,8 @@ app.use(
 //   }
 //   next();
 // });
-app.use(express.json());
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
 // ---------- Root: List available tools ----------
 app.get("/", (req, res) => {
   res.json({
@@ -100,10 +101,20 @@ app.post("/chat", authenticate, async (req, res) => {
       });
     }
 
-    const { message, history } = req.body;
+    const { message, history, contextData } = req.body;
     // Use delegatedToken for downstream calls
-    const reply = await runAgent(req.auth, delegatedToken, message, history);
-    res.json({ reply });
+    const agentResult = await runAgent(
+      req.auth,
+      delegatedToken,
+      message,
+      history,
+      contextData,
+    );
+    if (typeof agentResult === "string") {
+      res.json({ reply: agentResult });
+    } else {
+      res.json({ reply: agentResult.reply, rawData: agentResult.rawData });
+    }
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });

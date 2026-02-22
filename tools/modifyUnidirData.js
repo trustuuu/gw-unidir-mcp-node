@@ -15,7 +15,7 @@ export async function modifyUnidirData(args = {}) {
   const allowed = ["POST", "PUT", "PATCH", "DELETE"];
   if (!allowed.includes(httpMethod))
     return error(
-      `Invalid method: ${method}. Must be one of ${allowed.join(", ")}`
+      `Invalid method: ${method}. Must be one of ${allowed.join(", ")}`,
     );
 
   let body = {};
@@ -27,8 +27,8 @@ export async function modifyUnidirData(args = {}) {
     }
   }
 
-  //const baseUrl = process.env.UNIDIR_API_BASE || "http://oauth.biocloud.pro/v1";
-  const url = baseUrl.replace(/\/$/, "") + endpoint;
+  const requestedBaseUrl = args.base_url || baseUrl;
+  const url = requestedBaseUrl.replace(/\/$/, "") + endpoint;
 
   const result = await safeApiCall({
     method: httpMethod,

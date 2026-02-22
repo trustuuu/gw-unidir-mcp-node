@@ -26,7 +26,6 @@ const auth = new GoogleAuth({
   scopes: "https://www.googleapis.com/auth/cloud-platform",
 });
 const client = await auth.getClient();
-const accessToken = await client.getAccessToken();
 
 const vertex_ai = new VertexAI({
   project: process.env.GEMINI_MODEL_PROJECT,
@@ -61,6 +60,9 @@ async function getEmbedding(text) {
   // const accessToken = await client.getAccessToken();
   //const serviceAccount = JSON.parse(process.env.GCP_SERVICE_ACCOUNT_KEY);
 
+  // Fetch a fresh access token per execution to prevent expiry crashes
+  const accessToken = await client.getAccessToken();
+
   const response = await fetch(url, {
     method: "POST",
     headers: {
@@ -83,7 +85,13 @@ async function getEmbedding(text) {
   return data.predictions[0].embeddings.values;
 }
 
-export async function runAgent(auth, token, prompt, history = []) {
+export async function runAgent(
+  auth,
+  token,
+  prompt,
+  history = [],
+  contextData = null,
+) {
   const { tenant_id, client_id, companyId, domainId } = auth;
 
   let decisionText = "";
@@ -101,7 +109,11 @@ export async function runAgent(auth, token, prompt, history = []) {
     const retrievedContext = results
       .map((r) => `Path: ${r.path}\nContent: ${r.text}`)
       .join("\n---\n");
-    const reasoningPrompt = buildReasoningPrompt(prompt, retrievedContext);
+    const reasoningPrompt = buildReasoningPrompt(
+      prompt,
+      retrievedContext,
+      contextData,
+    );
     console.log("reasoningPrompt", reasoningPrompt);
 
     // Construct multi-turn conversation
@@ -157,10 +169,20 @@ export async function runAgent(auth, token, prompt, history = []) {
   );
   let finalResult = "";
   if (!toolAction) {
+    if (action?.action === "use_context" && contextData) {
+      console.log("Using provided contextData for follow-up query");
+      const resultTool =
+        typeof contextData === "string"
+          ? contextData
+          : JSON.stringify(contextData);
+      finalResult = await getFinalResult(action, prompt, resultTool, history);
+      return { reply: finalResult, rawData: contextData };
+    }
+
     // If no tool call, the decisionText itself is the response
     finalResult = decisionText;
     finalResult = AddTargetURL(finalResult, action);
-    return finalResult;
+    return { reply: finalResult, rawData: contextData };
   } else {
     let ToolData = {};
     if (action?.action === "fetch_unidir_user") {
@@ -206,6 +228,22 @@ export async function runAgent(auth, token, prompt, history = []) {
         application_id: objectId,
         token: token,
       };
+    } else if (
+      action?.action.startsWith("create_unidir_") ||
+      action?.action.startsWith("update_unidir_") ||
+      action?.action.startsWith("delete_unidir_")
+    ) {
+      const entityStr = action?.action.split("_").pop();
+      const idKey = `${entityStr}_id`;
+      const objectId = action.args?.[idKey] || null;
+
+      ToolData = {
+        company_id: action.args?.company_id || companyId,
+        domain_id: action.args?.domain_id || domainId,
+        object_id: objectId,
+        token: token,
+        body_json: action.args?.body_json || "{}",
+      };
     }
     console.log("ToolData", ToolData);
     const resultTool = await callUnidirTool(action?.action, ToolData);
@@ -213,7 +251,15 @@ export async function runAgent(auth, token, prompt, history = []) {
     finalResult = await getFinalResult(action, prompt, resultTool, history);
     console.log(`${action?.action} finalResult`, finalResult);
 
-    return finalResult;
+    let newRawData = null;
+    try {
+      newRawData =
+        typeof resultTool === "string" ? JSON.parse(resultTool) : resultTool;
+    } catch {
+      newRawData = resultTool;
+    }
+
+    return { reply: finalResult, rawData: newRawData };
   }
 }
 

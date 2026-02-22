@@ -1,17 +1,24 @@
-export function buildReasoningPrompt(userPrompt, retrieveRules) {
+export function buildReasoningPrompt(
+  userPrompt,
+  retrieveRules,
+  contextData = null,
+) {
+  const contextInstruction = contextData
+    ? `\nPreviously Fetched Data: ${JSON.stringify(contextData)}\n- If the user asks a follow-up question to filter, extract, or format the "Previously Fetched Data" without needing new records out of the database, output {"action": "use_context", "description": "Using previously fetched data"}\n`
+    : "";
+
   // Step 1: Ask Gemini to reason and decide what to do
   const reasoningPrompt = `
 You are an AI agent that can both:
 (1) Call UniDir MCP tools via HTTP
 (2) Provide frontend navigation paths from the UI navigation JSON ("retrievePath" actions).
-
+${contextInstruction}
 Available MCP tools:
 1. get_access_token(client_id, client_secret)
-2. fetch_unidir_user(company_id, domain_id, user_id, token)
-3. fetch_unidir_group(company_id, domain_id, group_id, token)
-4. fetch_unidir_company(company_id, token)
-5. fetch_unidir_domain(company_id, domain_id, token)
-6. fetch_unidir_application(company_id, domain_id, application_id, token)
+2. fetch_unidir_user, fetch_unidir_group, fetch_unidir_company, fetch_unidir_domain, fetch_unidir_application, fetch_unidir_api
+3. create_unidir_<entity> where <entity> is one of: user, group, company, domain, application, api
+4. update_unidir_<entity>
+5. delete_unidir_<entity>
 
 Available frontend paths:
 ${retrieveRules}
@@ -107,6 +114,18 @@ Rules:
     "retrievePath": "<path>",
     "retrieveParams": "<params>",
     "description": "<rule description>"}
+
+- If the user asks to CREATE an object, respond with a JSON object:
+  {"action":"create_unidir_<entity>","args":{"body_json":"{\\"key\\":\\"value\\"}"},
+    "description": "Create a new <entity>"}
+
+- If the user asks to UPDATE an object by ID, respond with a JSON object:
+  {"action":"update_unidir_<entity>","args":{"<entity>_id":"...","body_json":"{\\"key\\":\\"value\\"}"},
+    "description": "Update the <entity>"}
+
+- If the user asks to DELETE an object by ID, respond with a JSON object:
+  {"action":"delete_unidir_<entity>","args":{"<entity>_id":"..."},
+    "description": "Delete the <entity>"}
 
 - If the user asks about UI navigation, respond with:
   {"retrievePath":"<path>",
