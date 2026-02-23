@@ -102,6 +102,7 @@ app.post("/chat", authenticate, async (req, res) => {
     }
 
     const { message, history, contextData } = req.body;
+
     // Use delegatedToken for downstream calls
     const agentResult = await runAgent(
       req.auth,

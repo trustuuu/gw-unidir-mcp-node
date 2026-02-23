@@ -4,7 +4,7 @@ export function buildReasoningPrompt(
   contextData = null,
 ) {
   const contextInstruction = contextData
-    ? `\nPreviously Fetched Data: ${JSON.stringify(contextData)}\n- If the user asks a follow-up question to filter, extract, or format the "Previously Fetched Data" without needing new records out of the database, output {"action": "use_context", "description": "Using previously fetched data"}\n`
+    ? `\n=========================================\nCRITICAL - PREVIOUSLY FETCHED DATA AVAILABLE\n=========================================\nData: ${JSON.stringify(contextData)}\n\nIf the user's request can be answered by checking, filtering, summarizing, or extracting from the "Previously Fetched Data" above (e.g. "get HR group information"), you MUST output EXACTLY:\n{"action": "use_context", "description": "Analyzing previously fetched data"}\n\nDO NOT use fetch_unidir_* tools unless the user specifically asks for records NOT present in the data above.\n=========================================\n`
     : "";
 
   // Step 1: Ask Gemini to reason and decide what to do
@@ -24,6 +24,9 @@ Available frontend paths:
 ${retrieveRules}
 
 Rules:
+- HIGHEST PRIORITY: If PREVIOUSLY FETCHED DATA is provided above and can fulfill the user's request (e.g. searching, filtering, aggregating), you MUST ignore all tool rules below and output exactly:
+  {"action": "use_context", "description": "Analyzing previously fetched data"}
+
 - If the user asks about a user, respond with a JSON object:
   {"action":"fetch_unidir_user","args":{"user_id":"..."},
     "retrievePath": "<path>",

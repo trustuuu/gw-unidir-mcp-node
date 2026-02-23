@@ -94,6 +94,15 @@ export async function runAgent(
 ) {
   const { tenant_id, client_id, companyId, domainId } = auth;
 
+  let parsedContextData = contextData;
+  if (typeof contextData === "string") {
+    try {
+      parsedContextData = JSON.parse(contextData);
+    } catch (e) {
+      // ignore
+    }
+  }
+
   let decisionText = "";
   try {
     const DB_PATH = path.join(process.cwd(), "ingest/unidir_vectors");
@@ -109,10 +118,11 @@ export async function runAgent(
     const retrievedContext = results
       .map((r) => `Path: ${r.path}\nContent: ${r.text}`)
       .join("\n---\n");
+    console.log("retrievedContext", retrievedContext.substring(0, 50));
     const reasoningPrompt = buildReasoningPrompt(
       prompt,
       retrievedContext,
-      contextData,
+      parsedContextData,
     );
     console.log("reasoningPrompt", reasoningPrompt);
 
@@ -169,20 +179,20 @@ export async function runAgent(
   );
   let finalResult = "";
   if (!toolAction) {
-    if (action?.action === "use_context" && contextData) {
+    if (action?.action === "use_context" && parsedContextData) {
       console.log("Using provided contextData for follow-up query");
       const resultTool =
-        typeof contextData === "string"
-          ? contextData
-          : JSON.stringify(contextData);
+        typeof parsedContextData === "string"
+          ? parsedContextData
+          : JSON.stringify(parsedContextData);
       finalResult = await getFinalResult(action, prompt, resultTool, history);
-      return { reply: finalResult, rawData: contextData };
+      return { reply: finalResult, rawData: parsedContextData };
     }
 
     // If no tool call, the decisionText itself is the response
     finalResult = decisionText;
     finalResult = AddTargetURL(finalResult, action);
-    return { reply: finalResult, rawData: contextData };
+    return { reply: finalResult, rawData: parsedContextData };
   } else {
     let ToolData = {};
     if (action?.action === "fetch_unidir_user") {
