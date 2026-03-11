@@ -1,4 +1,3 @@
-
 import { Timestamp } from "./Timestamp";
 
 export interface UserName {
@@ -51,20 +50,21 @@ export interface IUser {
   timezone: string | null;
   active: boolean;
   mfa: boolean;
+  logonEnabled: boolean;
   status: "active" | "deleted" | "suspended";
-  
+
   // Complex Objects
   name: UserName;
   meta: {
     resourceType: string;
   };
-  
+
   // Arrays
   emails: MultiValue[];
   phoneNumbers: MultiValue[];
   addresses: Address[];
   Schemas: string[];
-  
+
   // Extensions & Metadata
   EnterpriseExtension: EnterpriseExtension;
   customExtension: Record<string, any>;
@@ -72,5 +72,5 @@ export interface IUser {
   whenUpdated: Timestamp;
 
   // Placeholder for the "0" key if your API returns the object nested under index keys
-  [key: string]: any; 
+  [key: string]: any;
 }

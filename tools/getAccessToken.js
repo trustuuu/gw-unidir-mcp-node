@@ -10,7 +10,7 @@ export async function getAccessToken(args = {}) {
     client_id: args.client_id,
     client_secret: args.client_secret,
   });
-  console.log("data", data);
+
   const result = await safeApiCall({
     method: "POST",
     url: tokenUrl,

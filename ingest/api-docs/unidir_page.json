@@ -61,19 +61,19 @@
     },
     {
       "rule": "If the user asks about a user with user id, respond with a JSON object, path and params",
-      "path": "users-view",
+      "path": "users",
       "params": "{'userId':{user_id}, 'mode':'view'}",
       "description": "show or view a user information."
     },
     {
       "rule": "If the user asks to create new user. , respond with a JSON object, path and params.",
-      "path": "users-new",
+      "path": "users",
       "params": "{'mode':'new'}",
       "description": "Post a new user."
     },
     {
       "rule": "If the user asks to edit a user with user id, respond with a JSON object, path and params",
-      "path": "users-edit",
+      "path": "users",
       "params": "{'userId':{user_id}, 'mode':'edit'}",
       "description": "Edit or modify a user information."
     },
@@ -91,19 +91,19 @@
     },
     {
       "rule": "If the user asks to create a group, respond with a JSON object, path and params.",
-      "path": "groups-new",
+      "path": "groups",
       "params": "{'mode':'new'}",
       "description": "Post a new group."
     },
     {
       "rule": "If the user asks about a group with group id, respond with a JSON object, path and params",
-      "path": "groups-view",
+      "path": "groups",
       "params": "{'groupId':{group_id}, 'mode':'view'}",
       "description": "show or view a group information."
     },
     {
       "rule": "If the user asks to edit a group with group id, respond with a JSON object, path and params",
-      "path": "users-edit",
+      "path": "users",
       "params": "{'groupId':{group_id}, 'mode':'edit'}",
       "description": "Edit or modify a group information."
     },
@@ -115,25 +115,25 @@
     },
     {
       "rule": "If the user asks about a group information, respond with a JSON object, path and params.",
-      "path": "applications-brief",
+      "path": "applications",
       "params": "{'mode':'view'}",
       "description": "View a application information."
     },
     {
       "rule": "If the user asks to see a application information, respond with a JSON object, path and params.",
-      "path": "applications-view-setting",
+      "path": "applications",
       "params": "{'mode':'view'}",
       "description": "View a application information in detail."
     },
     {
       "rule": "If the user asks about new application, respond with a JSON object, path and params.",
-      "path": "applications-view-post",
+      "path": "applications",
       "params": "{'mode':'new'}",
       "description": "Post a application "
     },
     {
       "rule": "If the user asks to edit applicaiton permission scopes, respond with a JSON object, path and params.",
-      "path": "applications-view-permission-scope",
+      "path": "applications",
       "params": "mode=edit",
       "description": "View all permission scopes of a application."
     },
@@ -146,8 +146,8 @@
     },
     {
       "rule": "If the user asks about a api information, respond with a JSON object, path and params.",
-      "path": "appis-brief",
-      "params": "mode=overview",
+      "path": "appis",
+      "params": "mode=view",
       "description": "View a api information."
     }
   ]
