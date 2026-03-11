@@ -13,37 +13,37 @@
   "rules": [
     {
       "rule": "If the user asks about all companies, respond with a JSON object, path and params",
-      "path": "onboarding-companies",
+      "path": "companies",
       "params": "",
       "description": "List all companies."
     },
     {
       "rule": "If the user asks about a company with company id, respond with a JSON object, path and params",
-      "path": "onboarding-company-new",
+      "path": "companies",
       "params": "{'companyId':{company_id}, 'mode':'view'}",
       "description": "show or view a company information."
     },
     {
       "rule": "If the user asks to create new company. , respond with a JSON object, path and params.",
-      "path": "onboarding-company-new",
+      "path": "companies",
       "params": "{'mode':'new'}",
       "description": "Post a new company."
     },
     {
       "rule": "If the user asks about all domains, respond with a JSON object, path and params.",
-      "path": "onboarding-domains",
+      "path": "domains",
       "params": "",
       "description": "List all domains."
     },
     {
       "rule": "If the user asks about a domain with domain id, respond with a JSON object, path and params",
-      "path": "onboarding-domain-new",
+      "path": "domains",
       "params": "{'domainId':{domain_id}, 'mode':'view'}",
       "description": "show or view a domain information."
     },
     {
       "rule": "If the user asks about new domain, respond with a JSON object, path and params.",
-      "path": "onboarding-domain-new",
+      "path": "domains",
       "params": "{'mode':'new'}",
       "description": "Post a new domain."
     },
@@ -55,7 +55,7 @@
     },
     {
       "rule": "If the user asks to delete a user. , respond with a JSON object, path and params.",
-      "path": "users-deleted",
+      "path": "users/deleted",
       "params": "{'status':'deleted'}",
       "description": "List all deleted users but not purged permantally. users can be undeleted or purge permantally."
     },
@@ -85,7 +85,7 @@
     },
     {
       "rule": "If the user asks to delete a group, respond with a JSON object, path and params.",
-      "path": "groups-deleted",
+      "path": "groups/deleted",
       "params": "{'status':'deleted'}",
       "description": "List all deleted groups but not purged permantally. groups can be undeleted or purge permantally."
     },
